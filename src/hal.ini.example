@@ -1,0 +1,5 @@
+[hal]
+; Discord bot secret.
+secret=PUT-YOUR-SECRET-HERE
+; Debug at message level?
+msg-level-debug=False

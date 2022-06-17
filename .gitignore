@@ -131,3 +131,6 @@ dmypy.json
 # Dependencies folder
 src/deps/
 
+# Do not share the real .ini file
+hal.ini
+
