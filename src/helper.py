@@ -45,3 +45,12 @@ class ColorFormatter(logging.Formatter):
         # Remove the cache layer
         record.exc_text = None
         return output
+
+# Not Yet Implemented exception - used for command clarification
+class NotYetImplemented(Exception):
+    """This feature has not yet been implemented."""
+    def __init__(self):
+        self.message = 'This feature has not yet been implemented.'
+
+    def __str__(self):
+        return (str(self.message))

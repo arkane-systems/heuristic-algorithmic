@@ -17,10 +17,15 @@ import configuration
 import helper
 
 import cmd_core
+import cmd_admin
+import cmd_botadmin
 import cmd_dev
 
 # Bot class
 class HeuristicAlgorithmic (commands.Bot):
+    bot_app_info: discord.AppInfo
+    owner_id: int
+
     def __init__ (self, logger):
 
         self.logger = logger
@@ -30,23 +35,41 @@ class HeuristicAlgorithmic (commands.Bot):
         intents.message_content = True
 
         super().__init__(command_prefix='!',
-                         description='Heuristic Algorithmic',
+                         description='Heuristic Algorithmic: a general-purpose Discord supervisor',
                          intents=intents,
                          activity=discord.Game(name="https://github.com/arkane-systems/heuristic-algorithmic"))
 
-    async def setup_hook(self):
+    async def setup_hook(self) -> None:
+        # Record self information
+        self.bot_app_info = await self.application_info()
+        self.owner_id = self.bot_app_info.owner.id
+
         # Add the commands in cogs to the system.
         await self.add_cog(cmd_core.Core(self))
+        await self.add_cog(cmd_admin.Administration(self))
+        await self.add_cog(cmd_botadmin.HalAdministration(self))
         await self.add_cog(cmd_dev.Developer(self))
 
-    async def on_command_error(self, ctx, exception):
+    async def on_command_error(self, ctx: commands.Context, exception: commands.CommandError) -> None:
         # Check for check failures.
-        if isinstance (exception, commands.errors.CheckFailure):
+        if isinstance (exception, commands.CheckFailure):
             self.logger.info (f"User {ctx.author.name} is not permitted to run the command `{ctx.message.content}`.")
             await ctx.reply(f'You are not permitted to run the command `{ctx.message.content}`.')
-            return
-
-        await super().on_command_error(ctx, exception)
+        elif isinstance(exception, commands.NoPrivateMessage):
+            await ctx.reply('This command cannot be used in private messages.')
+        elif isinstance(exception, commands.DisabledCommand):
+            await ctx.reply('Sorry. This command is disabled and cannot be used.')
+        elif isinstance(exception, commands.MissingRequiredArgument):
+            await ctx.reply(str(exception))
+        elif isinstance(exception, commands.ArgumentParsingError):
+            await ctx.reply(str(exception))
+        elif isinstance(exception, commands.CommandInvokeError):
+            if isinstance (exception.original, helper.NotYetImplemented):
+                await ctx.reply("This command is not yet implemented.")
+            else:
+                await super().on_command_error(ctx, exception)
+        else:
+            await super().on_command_error(ctx, exception)
 
     async def on_message(self, message):
         # Do not process own messages.
@@ -64,9 +87,17 @@ class HeuristicAlgorithmic (commands.Bot):
         # Log on successful login.
         self.logger.info('We have logged in as {0.user} (ID: {0.user.id})'.format(bot))
 
+        # Store the uptime (if the first call).
+        if not hasattr (self, 'uptime'):
+            self.uptime = discord.utils.utcnow()
+
         # List the guilds we are members of.
         for guild in bot.guilds:
             self.logger.info ('Connected to guild {0.name} (ID: {0.id})'.format(guild))
+
+    @property
+    def owner(self) -> discord.User:
+        return self.bot_app_info.owner
 
 # Non-class functions
 def init_logging():
