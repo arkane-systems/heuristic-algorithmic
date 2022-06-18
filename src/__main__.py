@@ -76,6 +76,10 @@ class HeuristicAlgorithmic (commands.Bot):
         if message.author == bot.user:
             return
 
+        # Do not process bot messages unless configured otherwise.
+        if (not configuration.parse_bot_msgs()) and message.author.bot:
+            return
+
         # Perform message-level debug logging if it is enabled.
         if configuration.msg_level_debug is True:
             self.logger.debug("Message received: %s", message.content)
