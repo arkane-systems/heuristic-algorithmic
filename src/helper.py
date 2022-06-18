@@ -1,5 +1,7 @@
 # Miscellaneous helper functions.
 
+import discord
+from discord.ext import commands
 import logging
 
 # Formatter for logging subsystem.
