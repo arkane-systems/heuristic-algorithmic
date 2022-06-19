@@ -5,6 +5,7 @@ from discord.ext import commands
 import logging
 import random
 
+from context import Context
 from helper import NotYetImplemented
 
 class Core(commands.Cog):
@@ -12,12 +13,17 @@ class Core(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = bot.logger.getChild("commands.core")
-    
+
     @commands.command()
     async def echo(self, ctx, *, message):
         """Repeat back a given message to you."""
         self.logger.info(f'command invoked: echo with parameters `{message}`')
-        await ctx.reply (message)
+        await ctx.reply(message)
+
+    @commands.command()
+    async def hello(self, ctx: Context):
+        """Displays my intro message."""
+        await ctx.reply('Hello! I\'m a robot! Cerebrate#5337 made me to administer his servers.')
 
     @commands.command(name='kill-all-humans')
     async def kill_all_humans(self, ctx):
