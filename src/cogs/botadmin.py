@@ -4,9 +4,13 @@ import discord
 from discord.ext import commands
 import logging
 
-class HalAdministration(commands.Cog):
+from bot import HeuristicAlgorithmic
+
+class Hal(commands.Cog):
+    bot: HeuristicAlgorithmic
+
     """HAL administration commands (bot owner only)."""
-    def __init__(self, bot):
+    def __init__(self, bot: HeuristicAlgorithmic):
         self.bot = bot
         self.logger = bot.logger.getChild("commands.botadmin")
 
@@ -17,14 +21,17 @@ class HalAdministration(commands.Cog):
         return valid
 
     @commands.group()
-    async def botadmin(self, ctx):
-        """'bot administration commands; !help botadmin for details."""
+    async def hal(self, ctx):
+        """'bot administration commands; !help hal for details."""
         if ctx.invoked_subcommand is None:
-            await ctx.reply('You must specify a subcommand to `admin`.')
+            await ctx.reply('You must specify a subcommand to `hal`.')
 
-    @botadmin.command()
+    @hal.command()
     async def shutdown(self, ctx):
         """Shut down the bot (this command affects all servers)."""
-        self.logger.info('command invoked: botadmin shutdown')
+        self.logger.info('command invoked: hal shutdown')
         await ctx.reply('Heuristic Algorithmic is shutting down...')
         await self.bot.close()
+
+async def setup(bot: HeuristicAlgorithmic):
+    await bot.add_cog(Hal(bot))

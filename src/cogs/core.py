@@ -30,3 +30,6 @@ class Core(commands.Cog):
         self.logger.info('command invoked: ping')
         await ctx.send("pong")
 
+async def setup(bot):
+    await bot.add_cog(Core(bot))
+

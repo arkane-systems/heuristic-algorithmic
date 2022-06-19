@@ -33,3 +33,6 @@ class Developer(commands.Cog, command_attrs=dict(hidden=True)):
         """Display the ID of the invoking user."""
         self.logger.info('command invoked: get_my_id')
         await ctx.reply(f"Current user with name {ctx.author.name} and nick {ctx.author.nick} is {ctx.author.id}.")
+
+async def setup(bot):
+    await bot.add_cog(Developer(bot))

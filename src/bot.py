@@ -14,6 +14,15 @@ import __about__
 import configuration
 import helper
 
+# Extension configuration
+initial_extensions = (
+    'cogs.core',
+    'cogs.admin',
+    'cogs.botadmin',
+    'cogs.dev',
+    'cogs.random',
+)
+
 # Bot class
 class HeuristicAlgorithmic (commands.Bot):
     bot_app_info: discord.AppInfo
@@ -47,22 +56,24 @@ class HeuristicAlgorithmic (commands.Bot):
         self.session = aiohttp.ClientSession()
 
         # Add the commands in cogs to the system.
-        # await self.add_cog(cmd_core.Core(self))
-        # await self.add_cog(cmd_admin.Administration(self))
-        # await self.add_cog(cmd_botadmin.HalAdministration(self))
-        # await self.add_cog(cmd_dev.Developer(self))
-        # await self.add_cog(cmd_random.Random(self))
+        for extension in initial_extensions:
+            try:
+                await self.load_extension(extension)
+                self.logger.info(f'Loaded extension {extension}.')
+            except Exception as e:
+                self.logger.error(f'Failed to load extension {extension}.')
+                traceback.print_exc()
 
     async def start(self, token: str) -> None:
         await super().start(token, reconnect=True)
 
     async def close(self) -> None:
-        await super().close()
-
         # Close down AIOHTTP client session
         await self.session.close()
+        await super().close()
 
     async def get_context(self, origin: Union[discord.Interaction, discord.Message], /, *, cls=Context) -> Context:
+        """Deliver the custom context class instead of the default."""
         return await super().get_context(origin, cls=cls)
 
     async def on_command_error(self, ctx: Context, exception: commands.CommandError) -> None:

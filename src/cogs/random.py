@@ -41,3 +41,6 @@ class Random(commands.Cog):
 
             else:
                 await ctx.send(embed=discord.Embed(title='Random Dog').set_image(url=url), reference=ctx.message)
+
+async def setup(bot):
+    await bot.add_cog(Random(bot))

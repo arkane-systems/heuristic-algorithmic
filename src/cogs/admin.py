@@ -14,7 +14,7 @@ class Administration(commands.Cog):
         """Only a server administrator can use these commands."""
         if ctx.guild is None:
             raise commands.NoPrivateMessage()
-        
+
         self.logger.debug (f"is server administrator? {ctx.author.guild_permissions.administrator}")
         return ctx.author.guild_permissions.administrator
 
@@ -23,3 +23,6 @@ class Administration(commands.Cog):
         """server administration commands; !help admin for details."""
         if ctx.invoked_subcommand is None:
             await ctx.reply('You must specify a subcommand to `admin`.')
+
+async def setup(bot):
+    await bot.add_cog(Administration(bot))
