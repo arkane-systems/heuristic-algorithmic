@@ -7,6 +7,7 @@ import random
 
 from bot import HeuristicAlgorithmic
 from context import Context
+from helper import NotYetImplemented
 
 class Template(commands.Cog):
     bot: HeuristicAlgorithmic
