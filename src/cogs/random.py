@@ -5,19 +5,32 @@ from discord.ext import commands
 import logging
 import random
 
+from bot import HeuristicAlgorithmic
 from context import Context
 from helper import NotYetImplemented
 
 class Random(commands.Cog):
     """Commands powered by randomness and chaos."""
-    def __init__(self, bot):
+    bot: HeuristicAlgorithmic
+
+    def __init__(self, bot: HeuristicAlgorithmic):
         self.bot = bot
         self.logger = bot.logger.getChild("commands.random")
 
-    @commands.command()
+    @property
+    def display_emoji(self) -> discord.PartialEmoji:
+        return discord.PartialEmoji(name='\N{GAME DIE}')
+
+    @commands.group()
+    async def random(self, ctx: Context):
+        """Displays a random thing you request; !help random for details."""
+        if ctx.invoked_subcommand is None:
+            await ctx.reply(f'You must specify a subcommand to `random`.')
+
+    @random.command()
     async def dog(self, ctx: Context):
         """Display a randomly chosen dog picture."""
-        self.logger.info('command invoked: dog')
+        self.logger.info('command invoked: random dog')
 
         async with ctx.session.get('https://random.dog/woof') as resp:
             if resp.status != 200:
@@ -41,6 +54,21 @@ class Random(commands.Cog):
 
             else:
                 await ctx.send(embed=discord.Embed(title='Random Dog').set_image(url=url), reference=ctx.message)
+
+    @random.command()
+    async def number(self, ctx: Context, minimum: int = 0, maximum: int = 100):
+        """Displays a random number within an optional range.
+        The minimum must be smaller than the maximum and the maximum number
+        accepted is 1000.
+        """
+        self.logger.info('command invoked: random number')
+
+        maximum = min(maximum, 1000)
+        if minimum >= maximum:
+            await ctx.reply('Maximum is smaller than minimum.')
+            return
+
+        await ctx.reply(str(random.randint(minimum, maximum)))
 
 async def setup(bot):
     await bot.add_cog(Random(bot))

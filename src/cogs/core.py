@@ -5,12 +5,15 @@ from discord.ext import commands
 import logging
 import random
 
+from bot import HeuristicAlgorithmic
 from context import Context
 from helper import NotYetImplemented
 
 class Core(commands.Cog):
+    bot: HeuristicAlgorithmic
+
     """Core commands available to all users."""
-    def __init__(self, bot):
+    def __init__(self, bot: HeuristicAlgorithmic):
         self.bot = bot
         self.logger = bot.logger.getChild("commands.core")
 
