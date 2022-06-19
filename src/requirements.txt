@@ -1,4 +1,4 @@
 git+https://github.com/Rapptz/discord.py.git
-aiohttp
 # discord.py >= 2.0
-
+aiohttp
+semver

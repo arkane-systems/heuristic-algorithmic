@@ -8,6 +8,10 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 
 # Tool update
+## Remove these next two lines when we can get discord.py from pip
+RUN apt update
+RUN apt install -y git
+
 RUN pip install -U \
     pip \
     setuptools \
@@ -18,20 +22,20 @@ WORKDIR /opt/hal
 
 # Create new user
 RUN useradd -m -r hal && \
-    chown hal /project
+    chown hal /opt/hal
+
+# Set user
+USER hal
 
 # Copy in requirements file
-COPY src/requirements.txt .
+COPY --chown=hal src/requirements.txt .
 
 # Install dependencies
 RUN mkdir -p deps
 RUN python3 -m pip install -r ./requirements.txt --target deps
 
 # Copy in main files
-COPY src .
-
-# Set user.
-USER hal
+COPY --chown=hal src .
 
 # Set entrypoint.
 ENTRYPOINT ["/tini", "--", "python3", "__main__.py"]
