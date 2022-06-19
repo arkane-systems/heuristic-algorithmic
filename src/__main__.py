@@ -1,9 +1,10 @@
 #! /usr/bin/env python3
 
 # Fix up python search path.
+import os.path
 import sys
 
-sys.path.append('./deps')
+sys.path.append(os.path.join (os.path.dirname(__file__), './deps'))
 
 # Imports
 
