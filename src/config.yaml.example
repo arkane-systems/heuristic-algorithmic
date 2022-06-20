@@ -1,0 +1,19 @@
+global:
+  discordSecret: INSERT_YOUR_SECRET_HERE
+
+  database:
+    connectionString: INSERT_YOUR_CONNECTION_STRING_HERE
+    databaseName: hal
+
+  logging:
+    logMessages: false
+
+  options:
+    parseBotMessages: false
+
+guilds:
+
+  - name: "Arkane Systems"
+
+  - name: "The Associated Worlds"
+
