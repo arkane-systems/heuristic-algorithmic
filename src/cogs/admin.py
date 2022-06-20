@@ -24,5 +24,20 @@ class Administration(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.reply('You must specify a subcommand to `admin`.')
 
+    @admin.command(name='get-special-channels')
+    async def get_special_channels(self, ctx):
+        """List the special channels available on this server."""
+        self.logger.info('command invoked: admin get-special-channels')
+        
+        modchan = ctx.config.get_moderator_channel(ctx.guild)
+        if modchan is not None:
+            clist += f'Moderator channel: {modchan.name}\n'
+
+        embed = discord.Embed(color=0x0000ff)
+        embed.title = 'Special channels'
+        embed.description = clist
+
+        await ctx.send(embed=embed, reference=ctx.message)
+
 async def setup(bot):
     await bot.add_cog(Administration(bot))

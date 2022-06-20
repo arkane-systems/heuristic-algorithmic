@@ -121,6 +121,30 @@ class HeuristicAlgorithmic (commands.Bot):
         # Default to processing bot commands.
         await self.process_commands (message)
 
+    async def on_message_delete(self, message: discord.Message):
+        # If configured to do so, echo deleted messages on the moderator channel.
+        if message.guild is not None:
+            if self.config.show_mods_deletes(message.guild) is True:
+                msg = f'@{message.author}, in channel #{message.channel.name}, has deleted the message:\n\n{message.content}'
+                modchan = self.config.get_moderator_channel(message.guild)
+
+                if modchan is None:
+                    self.logger.error ("Cannot echo deleted message; moderator channel not configured.")
+
+                await modchan.send(msg, allowed_mentions=discord.AllowedMentions.none())
+
+    async def on_message_edit(self, before: discord.Message, after: discord.Message):
+        # If configured to do so, echo edited messages on the moderator channel.
+        if before.guild is not None:
+            if self.config.show_mods_deletes(before.guild) is True:
+                msg = f'@{before.author}, in channel #{before.channel.name}, has edited their message:\n\n{before.content}\n\n->\n\n{after.content}'
+                modchan = self.config.get_moderator_channel(before.guild)
+
+                if modchan is None:
+                    self.logger.error ("Cannot echo edited message; moderator channel not configured.")
+
+                await modchan.send(msg, allowed_mentions=discord.AllowedMentions.none())
+
     async def on_ready(self):
         # Log on successful login.
         self.logger.info(f'We have logged in as {self.user} (ID: {self.user.id})')

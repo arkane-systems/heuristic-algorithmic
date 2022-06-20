@@ -2,6 +2,7 @@
 
 import copy
 import discord
+import helper
 from enum import Enum
 import os.path
 import sys
@@ -119,3 +120,44 @@ class Configuration:
                     return GuildVerified.UNVERIFIED
 
         return GuildVerified.NOTPRESENT
+
+    ## Guild channels
+    def get_moderator_channel(self, guild: discord.Guild) -> discord.TextChannel:
+        gc = self.guildData[guild.name]
+
+        if 'channels' in gc:
+            if 'moderator' in gc['channels']:
+                value = gc['channels']['moderator']
+
+                if not isinstance (value, str):
+                    return None
+
+                chan = discord.utils.get(guild.text_channels, name=value)
+                return chan
+
+        return None
+
+    ## Guild options
+    def show_mods_deletes(self, guild: discord.Guild) -> bool:
+        gc = self.guildData[guild.name]
+
+        if 'options' in gc:
+            if 'showModsDeletes' in gc['options']:
+                value = gc['options']['showModsDeletes']
+
+                if isinstance(value, bool):
+                    return value
+
+        return False
+            
+    def show_mods_edits(self, guild: discord.Guild) -> bool:
+        gc = self.guildData[guild.name]
+
+        if 'options' in gc:
+            if 'showModsEdits' in gc['options']:
+                value = gc['options']['showModsEdits']
+
+                if isinstance(value, bool):
+                    return value
+
+        return False

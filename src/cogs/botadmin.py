@@ -26,7 +26,7 @@ class Hal(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.reply('You must specify a subcommand to `hal`.')
 
-    @hal.command()
+    @hal.command(name='dump-config')
     async def dump_config(self, ctx):
         """Dump the configuration of this bot for examination."""
         self.logger.info('command invoked: hal dump-config')
