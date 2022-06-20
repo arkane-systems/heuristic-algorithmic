@@ -1,12 +1,20 @@
 # Configuration data module
 
 import copy
+import discord
+from enum import Enum
 import os.path
 import sys
 import yaml
 
+class GuildVerified(Enum):
+    VERIFIED = 1
+    UNVERIFIED = 2
+    NOTPRESENT = 3
+
 class Configuration:
     configData: dict
+    guildData: dict
 
     def __init__(self):
         try:
@@ -15,6 +23,15 @@ class Configuration:
         except:
             print ("error reading configuration file.")
             sys.exit(2)
+
+        # Set up guilds.
+        self.guildData = {}
+
+        if 'guilds' in self.configData:
+            if isinstance(self.configData['guilds'], list):
+                for guild in self.configData['guilds']:
+                    if 'name' in guild:
+                        self.guildData[guild['name']] = guild
 
     def get_config_dump(self) -> str:
         """Get the actual config as parsed, as a string."""
@@ -90,5 +107,15 @@ class Configuration:
         return False
 
     # Guilds
-    
+    def does_guild_config_exist(self, name: str) -> bool:
+        return name in self.guildData
 
+    def verify_guild_id(self, guild: discord.Guild) -> GuildVerified:
+        if guild.name in self.guildData:
+            if 'id' in self.guildData[guild.name]:
+                if self.guildData[guild.name]['id'] == guild.id:
+                    return GuildVerified.VERIFIED
+                else:
+                    return GuildVerified.UNVERIFIED
+
+        return GuildVerified.NOTPRESENT

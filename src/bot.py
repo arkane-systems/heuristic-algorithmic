@@ -129,9 +129,21 @@ class HeuristicAlgorithmic (commands.Bot):
         if not hasattr (self, 'uptime'):
             self.uptime = discord.utils.utcnow()
 
-        # List the guilds we are members of.
+        # Check for configs for our guilds; self-eject if there is wrongness.
         for guild in self.guilds:
-            self.logger.info (f'Connected to guild {guild.name} (ID: {guild.id})')
+            if self.config.does_guild_config_exist(guild.name):
+                result = self.config.verify_guild_id (guild)
+
+                if result == configuration.GuildVerified.VERIFIED:
+                    self.logger.info (f'Successfully connected to guild {guild.name} (ID: {guild.id})')
+                elif result == configuration.GuildVerified.UNVERIFIED:
+                    self.logger.error (f'Incorrect ID specified for guild {guild.name}; self-ejecting.')
+                    await guild.leave()
+                else:
+                    self.logger.warning (f'No id specified for guild {guild.name}; connecting anyway.')
+            else:
+                self.logger.error (f'No configuration exists for guild {guild.name}; self-ejecting.')
+                await guild.leave()
 
     @property
     def owner(self) -> discord.User:
