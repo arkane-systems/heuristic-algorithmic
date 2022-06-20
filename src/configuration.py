@@ -14,6 +14,14 @@ def hal_bot_secret() -> str:
     return (_config.get('hal', 'secret',
                         fallback=None))
 
+def mongodb_connection() -> str:
+    """Get the mongodb connection string for the back-end database."""
+    return _config.get('hal', 'mongodb-connection', fallback=None)
+
+def mongodb_db_name() -> str:
+    """Get the mongodb database name for the back-end database."""
+    return _config.get('hal', 'mongodb-database', fallback='hal')
+
 def msg_level_debug() -> bool:
     """Do we debug-log individual messages, or not?"""
     return _config.getboolean('hal', 'msg-level-debug', fallback=False)

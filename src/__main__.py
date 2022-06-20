@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 # Fix up python search path.
+from multiprocessing import connection
 import os.path
 import sys
 
@@ -14,7 +15,7 @@ import discord
 from discord.ext import commands
 from context import Context
 import logging
-import semver
+import pymongo
 from typing import Union
 
 import __about__
@@ -22,8 +23,7 @@ from bot import HeuristicAlgorithmic
 import configuration
 import helper
 
-# Startup functions
-def init_logging():
+def init_logging() -> logging.Logger:
     """Set up top-level logging for the bot."""
 
     log_handler = logging.StreamHandler()
@@ -34,8 +34,51 @@ def init_logging():
 
     return logger
 
-async def run_bot(logger):
-    bot = HeuristicAlgorithmic(logger)
+
+def init_database(logger: logging.Logger) -> pymongo.MongoClient:
+    """Set up connection to the MongoDB back-end."""
+    connection = pymongo.MongoClient(configuration.mongodb_connection())
+
+    try:
+        # The ping command is cheap and does not require auth.
+        connection.admin.command('ping')
+    except pymongo.errors.ConnectionFailure:
+        logger.critical ("mongodb back-end not available.")
+        sys.exit(1)
+
+    return connection
+
+
+def prepare_database(logger: logging.Logger, connection: pymongo.MongoClient) -> pymongo.database.Database:
+    """Prepare the HAL database for use."""
+    db_name = configuration.mongodb_db_name()
+
+    # Check if it exists.
+    dbs = connection.list_database_names()
+    if db_name in dbs:
+        # Return existing one.
+        return connection[db_name]
+    else:
+        # Create database.
+        db = connection.get_database(db_name)
+
+        # Create meta collection.
+        meta = db.create_collection ('meta')
+        meta.create_index ('name', unique=True)
+
+        # Write creation date.   
+        meta.insert_one ({'name' : 'created', 'time' : discord.utils.utcnow()})
+
+        # TODO: schemata/validation rules
+
+        # TODO: write default values?
+
+        # And return.
+        return db
+
+
+async def run_bot(logger: logging.Logger, connection: pymongo.MongoClient, db: pymongo.database.Database):
+    bot = HeuristicAlgorithmic(logger, connection, db)
     await bot.start(configuration.hal_bot_secret())
 
 
@@ -52,15 +95,24 @@ def entrypoint():
     logger.info ("heuristic-algorithmic version: %s", __about__.__version__)
     logger.info ("discord.py version: %s", discord.__version__)
 
+    # Initialize database
+    connection = init_database (logger)
+
+    # Prepare database
+    db = prepare_database (logger, connection)
+
     # Check if we have a secret.
     if configuration.hal_bot_secret() is None:
         logger.error ("no Discord bot secret specified; exiting")
         sys.exit (1)
 
     # Run the bot.
-    asyncio.run(run_bot(logger))
+    asyncio.run(run_bot(logger, connection, db))
 
     # Log exit of entry point.
     logger.info ("heuristic-algorithmic is stopping")
+
+    # Close database connection.
+    connection.close()
 
 entrypoint()

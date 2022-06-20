@@ -4,10 +4,10 @@
 
 import aiohttp
 import discord
+import logging
 from discord.ext import commands
 from context import Context
-import logging
-import semver
+import pymongo
 from typing import Union
 
 import __about__
@@ -26,11 +26,15 @@ initial_extensions = (
 # Bot class
 class HeuristicAlgorithmic (commands.Bot):
     bot_app_info: discord.AppInfo
+    connection: pymongo.MongoClient
+    db: pymongo.database.Database
     owner_id: int
 
-    def __init__ (self, logger):
+    def __init__ (self, logger: logging.Logger, connection: pymongo.MongoClient, db: pymongo.database.Database):
 
         self.logger = logger
+        self.connection = connection
+        self.db = db
 
         intents = discord.Intents.default()
         intents.bans = True
