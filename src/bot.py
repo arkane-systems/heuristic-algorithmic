@@ -8,6 +8,7 @@ import logging
 from discord.ext import commands
 from context import Context
 import pymongo
+import traceback
 from typing import Union
 
 import __about__
@@ -26,13 +27,16 @@ initial_extensions = (
 # Bot class
 class HeuristicAlgorithmic (commands.Bot):
     bot_app_info: discord.AppInfo
+    config: configuration.Configuration
     connection: pymongo.MongoClient
     db: pymongo.database.Database
+    logger: logging.Logger
     owner_id: int
 
-    def __init__ (self, logger: logging.Logger, connection: pymongo.MongoClient, db: pymongo.database.Database):
+    def __init__ (self, logger: logging.Logger, config: configuration.Configuration, connection: pymongo.MongoClient, db: pymongo.database.Database):
 
         self.logger = logger
+        self.config = config
         self.connection = connection
         self.db = db
 
@@ -107,11 +111,11 @@ class HeuristicAlgorithmic (commands.Bot):
             return
 
         # Do not process bot messages unless configured otherwise.
-        if (not configuration.parse_bot_msgs()) and message.author.bot:
+        if (self.config.parse_bot_msgs() is False) and (message.author.bot is True):
             return
 
         # Perform message-level debug logging if it is enabled.
-        if configuration.msg_level_debug is True:
+        if self.config.log_each_message() is True:
             self.logger.debug("Message received: %s", message.content)
 
         # Default to processing bot commands.

@@ -35,9 +35,9 @@ def init_logging() -> logging.Logger:
     return logger
 
 
-def init_database(logger: logging.Logger) -> pymongo.MongoClient:
+def init_database(logger: logging.Logger, config: configuration.Configuration) -> pymongo.MongoClient:
     """Set up connection to the MongoDB back-end."""
-    connection = pymongo.MongoClient(configuration.mongodb_connection())
+    connection = pymongo.MongoClient(config.mongodb_connection())
 
     try:
         # The ping command is cheap and does not require auth.
@@ -49,9 +49,9 @@ def init_database(logger: logging.Logger) -> pymongo.MongoClient:
     return connection
 
 
-def prepare_database(logger: logging.Logger, connection: pymongo.MongoClient) -> pymongo.database.Database:
+def prepare_database(logger: logging.Logger, config: configuration.Configuration, connection: pymongo.MongoClient) -> pymongo.database.Database:
     """Prepare the HAL database for use."""
-    db_name = configuration.mongodb_db_name()
+    db_name = config.mongodb_db_name()
 
     # Check if it exists.
     dbs = connection.list_database_names()
@@ -77,9 +77,9 @@ def prepare_database(logger: logging.Logger, connection: pymongo.MongoClient) ->
         return db
 
 
-async def run_bot(logger: logging.Logger, connection: pymongo.MongoClient, db: pymongo.database.Database):
-    bot = HeuristicAlgorithmic(logger, connection, db)
-    await bot.start(configuration.hal_bot_secret())
+async def run_bot(logger: logging.Logger, config: configuration.Configuration, connection: pymongo.MongoClient, db: pymongo.database.Database):
+    bot = HeuristicAlgorithmic(logger, config, connection, db)
+    await bot.start(config.discord_secret())
 
 
 def entrypoint():
@@ -88,7 +88,7 @@ def entrypoint():
     logger = init_logging()
 
     # Load configuration.
-    configuration.load()
+    config = configuration.Configuration()
 
     # Log basic information on startup.
     logger.info ("heuristic-algorithmic is starting up")
@@ -96,18 +96,18 @@ def entrypoint():
     logger.info ("discord.py version: %s", discord.__version__)
 
     # Initialize database
-    connection = init_database (logger)
+    connection = init_database (logger, config)
 
     # Prepare database
-    db = prepare_database (logger, connection)
+    db = prepare_database (logger, config, connection)
 
     # Check if we have a secret.
-    if configuration.hal_bot_secret() is None:
+    if config.discord_secret() is None:
         logger.error ("no Discord bot secret specified; exiting")
         sys.exit (1)
 
     # Run the bot.
-    asyncio.run(run_bot(logger, connection, db))
+    asyncio.run(run_bot(logger, config, connection, db))
 
     # Log exit of entry point.
     logger.info ("heuristic-algorithmic is stopping")

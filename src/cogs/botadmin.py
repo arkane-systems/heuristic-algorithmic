@@ -27,6 +27,17 @@ class Hal(commands.Cog):
             await ctx.reply('You must specify a subcommand to `hal`.')
 
     @hal.command()
+    async def dump_config(self, ctx):
+        """Dump the configuration of this bot for examination."""
+        self.logger.info('command invoked: hal dump-config')
+        
+        embed = discord.Embed(color=0x0000ff)
+        embed.title = 'HAL configuration'
+        embed.description = '```\n' + ctx.config.get_config_dump() + '\n```'
+
+        await ctx.send(embed=embed, reference=ctx.message)
+
+    @hal.command()
     async def shutdown(self, ctx):
         """Shut down the bot (this command affects all servers)."""
         self.logger.info('command invoked: hal shutdown')

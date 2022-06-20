@@ -6,6 +6,7 @@ from discord.ext import commands
 from typing import Union
 
 from aiohttp import ClientSession
+import configuration
 from pymongo.database import Database
 
 class Context(commands.Context):
@@ -20,3 +21,7 @@ class Context(commands.Context):
     @property
     def db(self) -> Database:
         return self.bot.db
+
+    @property
+    def config(self) -> configuration.Configuration:
+        return self.bot.config
