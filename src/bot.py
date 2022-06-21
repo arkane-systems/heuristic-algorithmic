@@ -3,16 +3,17 @@
 # Imports
 
 import aiohttp
+from difflib import unified_diff
 import discord
-import logging
 from discord.ext import commands
-from context import Context
+import logging
 import pymongo
 import traceback
 from typing import Union
 
 import __about__
 import configuration
+from context import Context
 import helper
 
 # Extension configuration
@@ -122,11 +123,17 @@ class HeuristicAlgorithmic (commands.Bot):
         await self.process_commands (message)
 
     async def on_message_delete(self, message: discord.Message):
+        # Get the moderator channel.
+        modchan = self.config.get_moderator_channel(message.guild)
+
+        # If the delete is in the moderator channel, discard it.
+        if message.channel == modchan:
+            return
+
         # If configured to do so, echo deleted messages on the moderator channel.
         if message.guild is not None:
             if self.config.show_mods_deletes(message.guild) is True:
-                msg = f'**<@{message.author}>, in channel <#{message.channel.name}>, has deleted the message:**\n\n{message.content}'
-                modchan = self.config.get_moderator_channel(message.guild)
+                msg = f'**@{message.author}, in channel #{message.channel.name}, has deleted the message:**\n\n{message.content}'
 
                 if modchan is None:
                     self.logger.error ("Cannot echo deleted message; moderator channel not configured.")
@@ -139,11 +146,22 @@ class HeuristicAlgorithmic (commands.Bot):
             # If not, don't bother with the rest.
             return
 
+        # Get the moderator channel.
+        modchan = self.config.get_moderator_channel(before.guild)
+
+        # If the edit is in the moderator channel, discard it.
+        if before.channel == modchan:
+            return
+
         # If configured to do so, echo edited messages on the moderator channel.
         if before.guild is not None:
-            if self.config.show_mods_deletes(before.guild) is True:
-                msg = f'**<@{before.author}>, in channel <#{before.channel.name}>, has edited their message:**\n\n{before.content}\n\n**to read:**\n\n{after.content}'
-                modchan = self.config.get_moderator_channel(before.guild)
+            if self.config.show_mods_edits(before.guild) is True:
+                # Make the diff.
+                diff = list(unified_diff(before.content.split('\n'), after.content.split('\n'),
+                                         fromfile='before', tofile='after', n=0, lineterm=''))
+                difftxt= '\n'.join(diff)
+
+                msg = f'**@{before.author}, in channel #{before.channel.name}, has edited their message:**\n```diff\n{difftxt}\n```'                
 
                 if modchan is None:
                     self.logger.error ("Cannot echo edited message; moderator channel not configured.")
@@ -221,7 +239,7 @@ class HeuristicAlgorithmic (commands.Bot):
 
         self.logger.info (f'Pinning message {message.id} to highlights channel (from @{author} on #{originalchan}).')
 
-        content = f'**<@{author}> said on channel <#{originalchan}>:**\n' + message.content + f'\n**Original message: <{message.jump_url}>**'
+        content = f'**@{author} said on channel #{originalchan}:**\n' + message.content + f'\n**Original message: <{message.jump_url}>**'
         attachments = message.attachments
         embeds = []
 
