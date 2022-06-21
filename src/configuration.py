@@ -122,6 +122,21 @@ class Configuration:
         return GuildVerified.NOTPRESENT
 
     ## Guild channels
+    def get_autopin_channel(self, guild: discord.Guild) -> discord.TextChannel:
+        gc = self.guildData[guild.name]
+
+        if 'channels' in gc:
+            if 'moderator' in gc['channels']:
+                value = gc['channels']['autopin']
+
+                if not isinstance (value, str):
+                    return None
+
+                chan = discord.utils.get(guild.text_channels, name=value)
+                return chan
+
+        return None
+
     def get_moderator_channel(self, guild: discord.Guild) -> discord.TextChannel:
         gc = self.guildData[guild.name]
 
@@ -138,6 +153,18 @@ class Configuration:
         return None
 
     ## Guild options
+    def autopin_threshold(self, guild: discord.Guild) -> int:
+        gc = self.guildData[guild.name]
+
+        if 'options' in gc:
+            if 'autopinThreshold' in gc['options']:
+                value = gc['options']['autopinThreshold']
+
+                if isinstance(value, int):
+                    return value
+
+        return 0
+
     def show_mods_deletes(self, guild: discord.Guild) -> bool:
         gc = self.guildData[guild.name]
 

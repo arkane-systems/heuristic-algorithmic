@@ -69,6 +69,11 @@ def prepare_database(logger: logging.Logger, config: configuration.Configuration
         # Write creation date.   
         meta.insert_one ({'name' : 'created', 'time' : discord.utils.utcnow()})
 
+        # Create pin collection.
+        pin = db.create_collection ('pin')
+        pin.create_index ([('guild_id', pymongo.ASCENDING), ('message_id', pymongo.ASCENDING)],
+            unique = True)
+
         # TODO: schemata/validation rules
 
         # TODO: write default values?

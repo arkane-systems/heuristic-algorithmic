@@ -45,7 +45,7 @@ class HeuristicAlgorithmic (commands.Bot):
         intents.members = True
         intents.messages = True
         intents.message_content = True
-        intents.reactions = True
+        intents.guild_reactions = True
 
         super().__init__(command_prefix=commands.when_mentioned_or('!'),
                          description='Heuristic Algorithmic: a general-purpose Discord supervisor',
@@ -125,7 +125,7 @@ class HeuristicAlgorithmic (commands.Bot):
         # If configured to do so, echo deleted messages on the moderator channel.
         if message.guild is not None:
             if self.config.show_mods_deletes(message.guild) is True:
-                msg = f'@{message.author}, in channel #{message.channel.name}, has deleted the message:\n\n{message.content}'
+                msg = f'**@{message.author}, in channel #{message.channel.name}, has deleted the message:**\n\n{message.content}'
                 modchan = self.config.get_moderator_channel(message.guild)
 
                 if modchan is None:
@@ -137,13 +137,46 @@ class HeuristicAlgorithmic (commands.Bot):
         # If configured to do so, echo edited messages on the moderator channel.
         if before.guild is not None:
             if self.config.show_mods_deletes(before.guild) is True:
-                msg = f'@{before.author}, in channel #{before.channel.name}, has edited their message:\n\n{before.content}\n\n->\n\n{after.content}'
+                msg = f'**@{before.author}, in channel #{before.channel.name}, has edited their message:**\n\n{before.content}\n\n**to read:**\n\n{after.content}'
                 modchan = self.config.get_moderator_channel(before.guild)
 
                 if modchan is None:
                     self.logger.error ("Cannot echo edited message; moderator channel not configured.")
 
                 await modchan.send(msg, allowed_mentions=discord.AllowedMentions.none())
+
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
+        user = payload.member
+        emoji = payload.emoji.name
+
+        if emoji == '📌':
+            # Handle pin reactions.
+            guild = self.get_guild (payload.guild_id)
+            threshold = self.config.autopin_threshold(guild)
+
+            if threshold == 0:
+                # Autopinning is disabled.
+                return
+            
+            pinchan = self.config.get_autopin_channel(guild)
+            channel = self.get_channel (payload.channel_id)
+
+            if channel == pinchan:
+                self.logger.info (f"Pin added to message in {guild}'s autopin channel; ignoring.")
+                return
+
+            # Get the message.
+            message = await channel.fetch_message (payload.message_id)
+
+            # Check for pinability; count reactions
+            pincount = discord.utils.find(lambda r: r.emoji == '📌', message.reactions).count
+            by_admin = user.guild_permissions.administrator
+
+            self.logger.info (f'Pin added to message on #{channel}@{guild} by {user}; count = {pincount}; by_admin={by_admin}')
+
+            if (pincount >= threshold) or by_admin:
+                # Pin the message.
+                await self.pin_message (message)
 
     async def on_ready(self):
         # Log on successful login.
@@ -168,6 +201,33 @@ class HeuristicAlgorithmic (commands.Bot):
             else:
                 self.logger.error (f'No configuration exists for guild {guild.name}; self-ejecting.')
                 await guild.leave()
+
+    async def pin_message(self, message: discord.Message):
+        # Check for duplicates so we don't pin the same message twice.
+        result = self.db['pin'].find_one ({ 'guild_id' : message.guild.id, 'message_id' : message.id })
+
+        if result is not None:
+            self.logger.info ("No need to pin message; it has already been pinned.")
+            return
+
+        # Pin the message.
+        author = message.author.name
+        originalchan = message.channel.name
+
+        self.logger.info (f'Pinning message {message.id} to highlights channel (from @{author} on #{originalchan}).')
+
+        content = f'**@{author} said on channel #{originalchan}:**\n' + message.content
+        attachments = message.attachments
+        embeds = []
+
+        for att in attachments:
+            embeds.append(discord.Embed(title=att.name,url=att.url))
+
+        highchan = self.config.get_autopin_channel(message.guild)
+        await highchan.send (content, embeds=embeds)
+
+        # Record the pinning of the message.
+        self.db['pin'].insert_one ({ 'guild_id' : message.guild.id, 'message_id' : message.id })
 
     @property
     def owner(self) -> discord.User:
