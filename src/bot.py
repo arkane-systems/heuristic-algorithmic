@@ -134,6 +134,11 @@ class HeuristicAlgorithmic (commands.Bot):
                 await modchan.send(msg, allowed_mentions=discord.AllowedMentions.none())
 
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
+        # Is this a true (content) change?
+        if before.content == after.content:
+            # If not, don't bother with the rest.
+            return
+
         # If configured to do so, echo edited messages on the moderator channel.
         if before.guild is not None:
             if self.config.show_mods_deletes(before.guild) is True:
@@ -216,7 +221,7 @@ class HeuristicAlgorithmic (commands.Bot):
 
         self.logger.info (f'Pinning message {message.id} to highlights channel (from @{author} on #{originalchan}).')
 
-        content = f'**@{author} said on channel #{originalchan}:**\n' + message.content
+        content = f'**@{author} said on channel #{originalchan}:**\n' + message.content + f'\n**Original message: {message.jump_url})**'
         attachments = message.attachments
         embeds = []
 
