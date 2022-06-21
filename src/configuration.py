@@ -121,6 +121,13 @@ class Configuration:
 
         return GuildVerified.NOTPRESENT
 
+    def get_faq_url(self, guild: discord.Guild) -> str:
+        if guild.name in self.guildData:
+            if 'faq' in self.guildData[guild.name]:
+                return self.guildData[guild.name]['faq']
+
+        return None
+
     ## Guild channels
     def get_autopin_channel(self, guild: discord.Guild) -> discord.TextChannel:
         gc = self.guildData[guild.name]

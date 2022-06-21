@@ -7,6 +7,7 @@ import random
 
 from bot import HeuristicAlgorithmic
 from context import Context
+from configuration import Configuration
 from helper import NotYetImplemented
 
 class Core(commands.Cog):
@@ -38,6 +39,27 @@ class Core(commands.Cog):
         """Can you hear me, HAL? It's me, Dave."""
         self.logger.info('command invoked: ping')
         await ctx.send("pong")
+
+    @commands.command()
+    async def rtfaq(self, ctx):
+        """Send a link to the server FAQ."""
+        self.logger.info('command invoked: rtfaq')
+
+        faqurl = ctx.config.get_faq_url(ctx.guild)
+
+        if faqurl is None:
+            await ctx.reply('No FAQ is configured for this server, sorry.')
+            return
+
+        ref = ctx.message
+
+        if ctx.message.reference is not None:
+            ref = ctx.message.reference
+
+        faqembed = discord.Embed(title="Server FAQ", type='link', url=faqurl, color=0x0000ff)
+
+        await ctx.send(content="Further information on this topic is available in the server FAQ:",
+                       embed=faqembed, reference=ref)
 
 async def setup(bot):
     await bot.add_cog(Core(bot))
