@@ -125,7 +125,7 @@ class HeuristicAlgorithmic (commands.Bot):
         # If configured to do so, echo deleted messages on the moderator channel.
         if message.guild is not None:
             if self.config.show_mods_deletes(message.guild) is True:
-                msg = f'**@{message.author}, in channel #{message.channel.name}, has deleted the message:**\n\n{message.content}'
+                msg = f'**<@{message.author}>, in channel <#{message.channel.name}>, has deleted the message:**\n\n{message.content}'
                 modchan = self.config.get_moderator_channel(message.guild)
 
                 if modchan is None:
@@ -142,7 +142,7 @@ class HeuristicAlgorithmic (commands.Bot):
         # If configured to do so, echo edited messages on the moderator channel.
         if before.guild is not None:
             if self.config.show_mods_deletes(before.guild) is True:
-                msg = f'**@{before.author}, in channel #{before.channel.name}, has edited their message:**\n\n{before.content}\n\n**to read:**\n\n{after.content}'
+                msg = f'**<@{before.author}>, in channel <#{before.channel.name}>, has edited their message:**\n\n{before.content}\n\n**to read:**\n\n{after.content}'
                 modchan = self.config.get_moderator_channel(before.guild)
 
                 if modchan is None:
@@ -221,7 +221,7 @@ class HeuristicAlgorithmic (commands.Bot):
 
         self.logger.info (f'Pinning message {message.id} to highlights channel (from @{author} on #{originalchan}).')
 
-        content = f'**@{author} said on channel #{originalchan}:**\n' + message.content + f'\n**Original message: <{message.jump_url}>**'
+        content = f'**<@{author}> said on channel <#{originalchan}>:**\n' + message.content + f'\n**Original message: <{message.jump_url}>**'
         attachments = message.attachments
         embeds = []
 
