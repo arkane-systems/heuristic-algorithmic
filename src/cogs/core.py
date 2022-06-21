@@ -2,9 +2,10 @@
 
 import discord
 from discord.ext import commands
-import logging
-import random
+import os
+import sys
 
+import __about__
 from bot import HeuristicAlgorithmic
 from context import Context
 from configuration import Configuration
@@ -17,6 +18,33 @@ class Core(commands.Cog):
     def __init__(self, bot: HeuristicAlgorithmic):
         self.bot = bot
         self.logger = bot.logger.getChild("commands.core")
+
+    @commands.command()
+    async def about(self, ctx):
+        """Display information about the bot."""
+        self.logger.info(f'command invoked: about')
+        
+        embed = discord.Embed(title='About The Bot', type='rich', color=0x0000ff)
+        embed.set_author (name=f'Heuristic Algorithmic ({__about__.__version__})',
+                          url='https://github.com/arkane-systems/heuristic-algorithmic',
+                          icon_url='https://raw.githubusercontent.com/arkane-systems/heuristic-algorithmic/master/hal_eye.jpg')
+
+        # Latency
+        # Memory
+        # Messages Seen
+        # Presence
+        # Up Time
+
+        embed.add_field(name='**Author**', value='Cerebrate#5337', inline=True)
+        embed.add_field(name='**Owner**', value=self.bot.owner.name, inline=True)
+
+        embed.add_field(name='**Library**', value=f'discordpy ({discord.__version__})', inline=False)
+        embed.add_field(name='**OS**', value=os.uname().release, inline=False)
+        embed.add_field(name='**Python**', value=sys.version, inline=False)
+        embed.add_field(name='**Website**', value='https://github.com/arkane-systems/heuristic-algorithmic', inline=False)
+        embed.add_field(name='**Terms of Service**', value='By joining a server using this bot or adding this bot to your server, you give express permission for the bot to collect and store any information it deems necessary to perform its functions, including but not limited to message content, message metadata, and user metadata.', inline=False)
+
+        await ctx.send (content="", embed=embed, reference=ctx.message)
 
     @commands.command()
     async def echo(self, ctx, *, message):
