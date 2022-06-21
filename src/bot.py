@@ -162,7 +162,7 @@ class HeuristicAlgorithmic (commands.Bot):
             if threshold == 0:
                 # Autopinning is disabled.
                 return
-            
+
             pinchan = self.config.get_autopin_channel(guild)
             channel = self.get_channel (payload.channel_id)
 
@@ -221,7 +221,7 @@ class HeuristicAlgorithmic (commands.Bot):
 
         self.logger.info (f'Pinning message {message.id} to highlights channel (from @{author} on #{originalchan}).')
 
-        content = f'**@{author} said on channel #{originalchan}:**\n' + message.content + f'\n**Original message: <{message.jump_url}>)**'
+        content = f'**@{author} said on channel #{originalchan}:**\n' + message.content + f'\n**Original message: <{message.jump_url}>**'
         attachments = message.attachments
         embeds = []
 
